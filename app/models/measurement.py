@@ -6,7 +6,6 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import (
-    BigInteger,
     DateTime,
     ForeignKey,
     Index,
@@ -17,7 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base
+from app.db.base import PRIMARY_KEY_TYPE, Base
 
 
 class Measurement(Base):
@@ -39,7 +38,7 @@ class Measurement(Base):
         {"mysql_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(PRIMARY_KEY_TYPE, primary_key=True, autoincrement=True)
     bridge_id: Mapped[str] = mapped_column(
         String(64), ForeignKey("bridges.bridge_id"), nullable=False
     )
