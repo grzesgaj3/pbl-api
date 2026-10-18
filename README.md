@@ -74,7 +74,7 @@ The plaintext key is printed once; only its hash is stored.
 ```bash
 python -m app.scripts.create_bridge mostek1
 # Bridge 'mostek1' created.
-# API key (store it now, it will not be shown again): 07w_xnXEPJN59emkjmayrxLpydh-jiRly7CN7G5ApqI
+# API key (store it now, it will not be shown again): <url-safe token, 43 chars>
 
 python -m app.scripts.create_bridge --list
 python -m app.scripts.create_bridge mostek1 --rotate      # new key
