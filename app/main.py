@@ -94,6 +94,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title=settings.app_name,
         version=__version__,
         description=_DESCRIPTION,
+        docs_url="/docs" if settings.enable_docs else None,
+        redoc_url="/redoc" if settings.enable_docs else None,
+        openapi_url="/openapi.json" if settings.enable_docs else None,
         openapi_tags=[
             {"name": "measurements", "description": "Rainfall readings."},
             {"name": "commands", "description": "Rain-gauge cleaning commands."},

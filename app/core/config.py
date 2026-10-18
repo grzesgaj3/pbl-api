@@ -30,14 +30,18 @@ class Settings(BaseSettings):
     app_name: str = "pbl-api"
     environment: str = "production"
     log_level: str = "info"
+    enable_docs: bool = Field(
+        default=True,
+        description="Serve /docs, /redoc and /openapi.json. Disable in production if not needed.",
+    )
 
     # --- Database ---------------------------------------------------------
     database_url: str = Field(
         ...,
         description="SQLAlchemy URL, e.g. mysql+pymysql://user:pass@host:3306/db",
     )
-    db_pool_size: int = Field(default=5, ge=1, le=100)
-    db_max_overflow: int = Field(default=5, ge=0, le=100)
+    db_pool_size: int = Field(default=2, ge=1, le=100)
+    db_max_overflow: int = Field(default=3, ge=0, le=100)
     db_pool_recycle: int = Field(default=1800, ge=-1)
     db_echo: bool = False
 
