@@ -100,6 +100,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_tags=[
             {"name": "measurements", "description": "Rainfall readings."},
             {"name": "commands", "description": "Rain-gauge cleaning commands."},
+            {"name": "stations", "description": "Registered bridge and sensor stations (admin)."},
             {"name": "ops", "description": "Health checks."},
         ],
     )
