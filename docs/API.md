@@ -43,7 +43,7 @@ Every failing request returns the same envelope:
 | 401 | `unauthorized` | Missing `X-API-Key`. |
 | 403 | `forbidden` | Key is invalid, inactive, or lacks the required role. |
 | 404 | `not_found` | Resource missing, or not visible to this caller. |
-| 409 | `conflict` | Command has already been acknowledged or rejected. |
+| 409 | `conflict` | Command already answered, or a measurement with the same `sensor_id` and `sent_at` belongs to another bridge. |
 | 422 | `validation_error` | Request body or query parameters are invalid. |
 | 503 | `service_unavailable` | `/health/ready` could not reach the database. |
 
@@ -101,7 +101,9 @@ A measurement is one rainfall reading.
 Store one reading. Idempotent on `(sensor_id, sent_at)`:
 
 - new row → **`201 Created`**
-- already stored → **`200 OK`** with the existing row (no duplicate)
+- already stored by the same bridge → **`200 OK`** with the existing row (no duplicate)
+- already stored by a *different* bridge → **`409 Conflict`** (another bridge's
+  row is never returned)
 
 ```bash
 curl -s -X POST http://localhost:8000/api/v1/measurements \

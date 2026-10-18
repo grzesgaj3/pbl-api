@@ -31,6 +31,10 @@ MAX_LIMIT = 1000
         },
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse, "description": "Missing API key."},
         status.HTTP_403_FORBIDDEN: {"model": ErrorResponse, "description": "Invalid bridge key."},
+        status.HTTP_409_CONFLICT: {
+            "model": ErrorResponse,
+            "description": "The same sensor_id and sent_at already exists for another bridge.",
+        },
     },
 )
 def create_measurement(
@@ -66,6 +70,13 @@ def create_measurement(
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Could not store the measurement.",
+            ) from None
+        if existing.bridge_id != bridge.bridge_id:
+            # (sensor_id, sent_at) is unique across all bridges, so a clash can
+            # also mean another bridge owns this reading. Never return it.
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="A measurement with the same sensor_id and sent_at already exists.",
             ) from None
         response.status_code = status.HTTP_200_OK
         return existing

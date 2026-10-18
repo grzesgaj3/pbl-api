@@ -54,6 +54,15 @@ def test_validation_error_envelope(client, bridge):
     assert error["details"]
 
 
+def test_duplicate_across_bridges_never_leaks(client, bridge, other_bridge):
+    client.post("/api/v1/measurements", json=_payload(), headers=bridge.headers)
+
+    response = client.post("/api/v1/measurements", json=_payload(), headers=other_bridge.headers)
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "conflict"
+    assert bridge.bridge_id not in response.text
+
+
 def test_blank_sensor_id_is_rejected(client, bridge):
     response = client.post(
         "/api/v1/measurements", json=_payload(sensor_id="   "), headers=bridge.headers
