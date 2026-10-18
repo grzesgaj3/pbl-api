@@ -10,7 +10,7 @@ requires an `X-API-Key` header.
 | Credential | How to obtain | What it can do |
 |------------|---------------|----------------|
 | **Bridge key** | `python -m app.scripts.create_bridge <bridge_id>` | Post measurements; read own measurements and commands; acknowledge/reject own commands. |
-| **Admin key** | `ADMIN_API_KEY` in `.env` | Create cleaning commands; read measurements and commands from every bridge. |
+| **Admin key** | `ADMIN_API_KEY` in `.env` | Create cleaning commands; read measurements and commands from every bridge; list bridges and sensors. |
 
 The `bridge_id` of a measurement or command is always derived from the bridge
 key — it is never taken from the request body, so a bridge cannot write or read
@@ -143,6 +143,71 @@ Results are ordered by `sent_at` descending, then `id` descending.
 ### `GET /measurements/{id}` — bridge or admin
 
 Returns one measurement. A bridge requesting another bridge's row gets `404`.
+
+---
+
+## Stations
+
+Read-only listings of the registered **bridges** (receiving stations) and
+**sensors** (measuring stations). Both endpoints are **admin only** and never
+return a bridge's API-key hash. They give the admin panel the bridges and
+sensors it needs to pick before posting a cleaning command.
+
+### `GET /bridges` — admin
+
+Query parameters: `is_active` (`true`/`false`), `q` (substring of `bridge_id`),
+`limit`, `offset`. Ordered by `bridge_id`.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `bridge_id` | string | Station identifier. |
+| `is_active` | boolean | Whether the bridge may authenticate. |
+| `created_at` | string | ISO 8601 UTC, database clock. |
+| `last_seen_at` | string \| null | Last authenticated request (refreshed at most hourly). |
+
+```bash
+curl -s "http://localhost:8000/api/v1/bridges?is_active=true" \
+  -H "X-API-Key: <admin key>"
+```
+
+```json
+{
+  "items": [
+    {
+      "bridge_id": "mostek1",
+      "is_active": true,
+      "created_at": "2026-10-18T12:44:50Z",
+      "last_seen_at": "2026-10-18T13:05:00Z"
+    }
+  ],
+  "limit": 100,
+  "offset": 0,
+  "count": 1,
+  "has_more": false
+}
+```
+
+### `GET /sensors` — admin
+
+Query parameters: `bridge_id`, `limit`, `offset`. Ordered by `sensor_id`.
+
+A sensor is registered automatically the first time a bridge posts a reading for
+it (first writer wins), so only sensors that have reported at least once are
+listed. `last_measurement_at` and `measurement_count` are derived from the
+stored readings.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `sensor_id` | string | Measuring-station identifier. |
+| `bridge_id` | string | Bridge that reported it. |
+| `created_at` | string | When the sensor was first seen. |
+| `last_measurement_at` | string \| null | Database time of the most recent reading. |
+| `measurement_count` | integer | Number of stored readings. |
+
+```bash
+curl -s "http://localhost:8000/api/v1/sensors?bridge_id=mostek1" \
+  -H "X-API-Key: <admin key>"
+```
 
 ---
 
