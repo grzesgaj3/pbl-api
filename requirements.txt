@@ -1,0 +1,7 @@
+# Runtime dependencies (pinned to lower bounds; see README for tested versions)
+fastapi>=0.115
+uvicorn[standard]>=0.30
+SQLAlchemy>=2.0
+PyMySQL>=1.1
+pydantic-settings>=2.4
+alembic>=1.13
