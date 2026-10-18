@@ -1,0 +1,57 @@
+# pbl-api systemd unit (single worker, hard memory cap).
+#
+# Install:
+#   sudo cp deploy/pbl-api.service /etc/systemd/system/pbl-api.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now pbl-api
+#
+# Assumes the app lives in /opt/pbl-api, runs as the "pbl" user and reads its
+# configuration from /opt/pbl-api/.env.
+
+[Unit]
+Description=pbl-api (rain-gauge measurement API)
+Documentation=file:/opt/pbl-api/docs/DEPLOYMENT.md
+After=network-online.target mariadb.service
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=pbl
+Group=pbl
+WorkingDirectory=/opt/pbl-api
+EnvironmentFile=/opt/pbl-api/.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+
+# One worker keeps memory predictable; sync endpoints still run concurrently in
+# uvicorn's thread pool. --limit-max-requests recycles the worker periodically
+# so any slow leak cannot grow forever.
+ExecStart=/opt/pbl-api/.venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 1 \
+    --no-server-header \
+    --limit-max-requests 100000
+
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+KillSignal=SIGINT
+
+# --- Resource limits: keep the service inside a small footprint ---------------
+MemoryHigh=192M
+MemoryMax=256M
+TasksMax=64
+
+# --- Hardening ---------------------------------------------------------------
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target
