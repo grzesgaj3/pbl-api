@@ -157,12 +157,15 @@ def acknowledge_command(
     },
 )
 def reject_command(
-    payload: CommandReject,
     db: DbSession,
     bridge: CurrentBridge,
+    payload: CommandReject | None = None,
     command_id: int = Path(ge=1),
 ) -> Command:
-    """Mark a command as rejected, optionally recording why."""
+    """Mark a command as rejected, optionally recording why.
+
+    The request body is optional; send ``{"note": "..."}`` to record a reason.
+    """
     command = _get_owned_command(db, command_id, bridge.bridge_id)
     if command.status != CommandStatus.PENDING:
         raise HTTPException(
@@ -172,7 +175,7 @@ def reject_command(
 
     command.status = CommandStatus.REJECTED
     command.responded_at = utc_now_naive()
-    command.response_note = payload.note
+    command.response_note = payload.note if payload is not None else None
     db.commit()
     db.refresh(command)
     return command
