@@ -54,6 +54,13 @@ def test_validation_error_envelope(client, bridge):
     assert error["details"]
 
 
+def test_blank_sensor_id_is_rejected(client, bridge):
+    response = client.post(
+        "/api/v1/measurements", json=_payload(sensor_id="   "), headers=bridge.headers
+    )
+    assert response.status_code == 422
+
+
 def test_bridge_lists_only_own_measurements(client, bridge, other_bridge):
     client.post("/api/v1/measurements", json=_payload(), headers=bridge.headers)
     client.post(
@@ -103,6 +110,36 @@ def test_list_filters_by_sent_window(client, bridge, admin_headers):
     assert outside["count"] == 0
 
 
+def test_list_filters_by_sensor(client, bridge, other_bridge, admin_headers):
+    client.post("/api/v1/measurements", json=_payload(), headers=bridge.headers)
+    client.post(
+        "/api/v1/measurements",
+        json=_payload(sensor_id="sensor2"),
+        headers=other_bridge.headers,
+    )
+
+    body = client.get("/api/v1/measurements?sensor_id=sensor2", headers=admin_headers).json()
+    assert body["count"] == 1
+    assert body["items"][0]["sensor_id"] == "sensor2"
+
+
+def test_pagination_reports_more_rows(client, bridge, admin_headers):
+    for index in range(3):
+        client.post(
+            "/api/v1/measurements",
+            json=_payload(sensor_id=f"sensor{index}", sent_at=SENT_AT + index),
+            headers=bridge.headers,
+        )
+
+    first_page = client.get("/api/v1/measurements?limit=2", headers=admin_headers).json()
+    assert first_page["count"] == 2
+    assert first_page["has_more"] is True
+
+    second_page = client.get("/api/v1/measurements?limit=2&offset=2", headers=admin_headers).json()
+    assert second_page["count"] == 1
+    assert second_page["has_more"] is False
+
+
 def test_get_measurement_hidden_from_other_bridge(client, bridge, other_bridge):
     created = client.post("/api/v1/measurements", json=_payload(), headers=bridge.headers).json()
 
@@ -111,6 +148,14 @@ def test_get_measurement_hidden_from_other_bridge(client, bridge, other_bridge):
 
     theirs = client.get(f"/api/v1/measurements/{created['id']}", headers=other_bridge.headers)
     assert theirs.status_code == 404
+
+
+def test_admin_can_read_any_measurement(client, bridge, other_bridge, admin_headers):
+    created = client.post("/api/v1/measurements", json=_payload(), headers=bridge.headers).json()
+
+    response = client.get(f"/api/v1/measurements/{created['id']}", headers=admin_headers)
+    assert response.status_code == 200
+    assert response.json()["bridge_id"] == bridge.bridge_id
 
 
 def test_get_missing_measurement_returns_404(client, admin_headers):

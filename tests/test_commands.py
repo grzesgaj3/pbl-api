@@ -93,3 +93,40 @@ def test_admin_can_read_single_command(client, bridge, admin_headers):
     response = client.get(f"/api/v1/commands/{command_id}", headers=admin_headers)
     assert response.status_code == 200
     assert response.json()["id"] == command_id
+
+
+def test_rejecting_twice_conflicts(client, bridge, admin_headers):
+    command_id = _create(client, admin_headers, bridge.bridge_id).json()["id"]
+    client.post(f"/api/v1/commands/{command_id}/reject", headers=bridge.headers)
+
+    response = client.post(f"/api/v1/commands/{command_id}/reject", headers=bridge.headers)
+    assert response.status_code == 409
+
+
+def test_reject_without_body_is_allowed(client, bridge, admin_headers):
+    command_id = _create(client, admin_headers, bridge.bridge_id).json()["id"]
+
+    response = client.post(f"/api/v1/commands/{command_id}/reject", headers=bridge.headers)
+    assert response.status_code == 200
+    assert response.json()["status"] == "REJECTED"
+    assert response.json()["response_note"] is None
+
+
+def test_admin_filters_commands_by_bridge(client, bridge, other_bridge, admin_headers):
+    _create(client, admin_headers, bridge.bridge_id)
+    _create(client, admin_headers, other_bridge.bridge_id)
+
+    body = client.get(
+        f"/api/v1/commands?bridge_id={other_bridge.bridge_id}", headers=admin_headers
+    ).json()
+    assert body["count"] == 1
+    assert body["items"][0]["bridge_id"] == other_bridge.bridge_id
+
+
+def test_get_missing_command_returns_404(client, admin_headers):
+    assert client.get("/api/v1/commands/999", headers=admin_headers).status_code == 404
+
+
+def test_unknown_status_filter_is_rejected(client, bridge):
+    response = client.get("/api/v1/commands?status=DONE", headers=bridge.headers)
+    assert response.status_code == 422
