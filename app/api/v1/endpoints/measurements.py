@@ -5,10 +5,12 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Path, Query, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from app.api.deps import CurrentBridge, CurrentPrincipal, DbSession
 from app.core.timeutil import epoch_to_utc_naive
 from app.models.measurement import Measurement
+from app.models.sensor import Sensor
 from app.schemas.common import ErrorResponse, Page
 from app.schemas.measurement import MeasurementCreate, MeasurementRead
 
@@ -16,6 +18,22 @@ router = APIRouter(prefix="/measurements", tags=["measurements"])
 
 DEFAULT_LIMIT = 100
 MAX_LIMIT = 1000
+
+
+def _ensure_sensor(db: Session, sensor_id: str, bridge_id: str) -> None:
+    """Register a measuring station the first time it reports a reading.
+
+    First writer wins: if ``sensor_id`` is already registered (possibly under
+    another bridge) the existing row is kept untouched. A concurrent insert is
+    tolerated by rolling back after the integrity error.
+    """
+    if db.scalar(select(Sensor).where(Sensor.sensor_id == sensor_id)) is not None:
+        return
+    db.add(Sensor(sensor_id=sensor_id, bridge_id=bridge_id))
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
 
 
 @router.post(
@@ -47,8 +65,9 @@ def create_measurement(
 
     Writes are idempotent: a retransmitted packet (same ``sensor_id`` and
     ``sent_at``) returns ``200`` with the already-stored row instead of
-    creating a duplicate.
+    creating a duplicate. The sensor is registered on first sight.
     """
+    _ensure_sensor(db, payload.sensor_id, bridge.bridge_id)
     measurement = Measurement(
         bridge_id=bridge.bridge_id,
         sensor_id=payload.sensor_id,
