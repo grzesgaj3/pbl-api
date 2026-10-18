@@ -5,7 +5,7 @@ from __future__ import annotations
 import enum
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Index, String, func
+from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Index, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -31,11 +31,12 @@ class Command(Base):
     __tablename__ = "commands"
     __table_args__ = (
         Index("ix_commands_bridge_status_created", "bridge_id", "status", "created_at"),
+        {"mysql_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     bridge_id: Mapped[str] = mapped_column(
-        String(64), ForeignKey("bridges.bridge_id"), nullable=False, index=True
+        String(64), ForeignKey("bridges.bridge_id"), nullable=False
     )
     sensor_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     command_type: Mapped[str] = mapped_column(
