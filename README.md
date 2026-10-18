@@ -139,6 +139,15 @@ ruff check .              # lint
 ruff format --check .     # formatting
 ```
 
+The default suite uses a throw-away SQLite database. To exercise the
+MariaDB-specific behaviour (native `ENUM`, `BIGINT` auto-increment,
+`DEFAULT CURRENT_TIMESTAMP`, `utf8mb4`), point the integration tests at a
+scratch schema:
+
+```bash
+PBL_TEST_MYSQL_URL='mysql+pymysql://root@127.0.0.1:3306/pbl_test' pytest -m integration
+```
+
 ## Deployment
 
 A step-by-step VPS guide (MariaDB, systemd, nginx/TLS, low-memory tuning) is in
