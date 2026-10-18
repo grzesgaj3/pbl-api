@@ -78,9 +78,7 @@ def _register_exception_handlers(app: FastAPI) -> None:
             {"loc": list(error.get("loc", [])), "msg": error.get("msg"), "type": error.get("type")}
             for error in exc.errors()
         ]
-        return _error_response(
-            status.HTTP_422_UNPROCESSABLE_ENTITY, "Request validation failed.", details
-        )
+        return _error_response(422, "Request validation failed.", details)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -119,7 +117,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         """Cheap liveness check that does not touch the database."""
         return HealthResponse(status="ok", version=__version__)
 
-    @app.get("/health/ready", response_model=HealthResponse, tags=["ops"], summary="Readiness probe")
+    @app.get(
+        "/health/ready",
+        response_model=HealthResponse,
+        tags=["ops"],
+        summary="Readiness probe",
+    )
     def health_ready() -> HealthResponse:
         """Readiness check: verifies the database is reachable."""
         try:

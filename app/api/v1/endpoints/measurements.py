@@ -137,7 +137,5 @@ def get_measurement(
     if measurement is None or (
         not principal.is_admin and measurement.bridge_id != principal.bridge_id
     ):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Measurement not found."
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Measurement not found.")
     return measurement

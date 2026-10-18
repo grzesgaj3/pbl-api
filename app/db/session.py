@@ -41,7 +41,7 @@ engine = _build_engine()
 
 
 @event.listens_for(engine, "connect")
-def _force_utc_session(dbapi_connection, _connection_record) -> None:  # pragma: no cover - dialect specific
+def _force_utc_session(dbapi_connection, _connection_record) -> None:
     """Force every MySQL/MariaDB session into UTC.
 
     ``TIMESTAMP`` columns are stored as UTC but rendered in the session time

@@ -91,7 +91,9 @@ def list_commands(
     if status_filter is not None:
         stmt = stmt.where(Command.status == status_filter)
 
-    stmt = stmt.order_by(Command.created_at.desc(), Command.id.desc()).offset(offset).limit(limit + 1)
+    stmt = (
+        stmt.order_by(Command.created_at.desc(), Command.id.desc()).offset(offset).limit(limit + 1)
+    )
     rows = list(db.scalars(stmt))
     has_more = len(rows) > limit
     items = rows[:limit]
@@ -111,9 +113,7 @@ def get_command(
 ) -> Command:
     """Return one command the caller is allowed to see."""
     command = db.get(Command, command_id)
-    if command is None or (
-        not principal.is_admin and command.bridge_id != principal.bridge_id
-    ):
+    if command is None or (not principal.is_admin and command.bridge_id != principal.bridge_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Command not found.")
     return command
 
