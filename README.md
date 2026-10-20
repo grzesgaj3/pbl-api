@@ -84,20 +84,6 @@ python -m app.scripts.create_bridge mostek1 --rotate      # new key
 python -m app.scripts.create_bridge mostek1 --deactivate  # disable
 ```
 
-### Seed test data
-
-Populate one bridge with synthetic readings — handy for exercising the admin
-panel or the listings. The bridge is identified by its API key:
-
-```bash
-python -m app.scripts.seed_measurements --api-key=<bridge key> --sensors 3 --count 500
-```
-
-Use the `=` form (`--api-key=<KEY>`) because url-safe keys may start with `-`,
-or provide the key through `PBL_BRIDGE_KEY` instead. Readings are spread over
-the last 7 days (`--days`), are reproducible with `--seed`, and re-running over
-the same window skips readings that already exist.
-
 ### Store a measurement
 
 ```bash
@@ -139,7 +125,7 @@ app/
 ├─ models/                 # bridges, sensors, measurements, commands
 ├─ schemas/                # Pydantic request/response models
 ├─ api/                    # auth dependencies + /api/v1 endpoints
-└─ scripts/                # create_bridge, seed_measurements
+└─ scripts/                # create_bridge
 alembic/                   # migrations
 tests/                     # pytest suite (SQLite, no MariaDB needed)
 docs/                      # API reference and deployment guide

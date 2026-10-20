@@ -1,7 +1,3 @@
-"""Command request/response schemas."""
-
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Literal
 
@@ -12,22 +8,16 @@ from app.models.command import CommandStatus
 
 
 class CommandCreate(BaseModel):
-    """Admin request to clean a single sensor behind a bridge."""
-
-    bridge_id: str = Field(min_length=1, max_length=64, examples=["mostek1"])
-    sensor_id: str = Field(min_length=1, max_length=64, examples=["sensor1"])
+    bridge_id: str = Field(min_length=1, max_length=64)
+    sensor_id: str = Field(min_length=1, max_length=64)
     command_type: Literal["clean"] = "clean"
 
 
 class CommandReject(BaseModel):
-    """Optional reason supplied by a bridge when it rejects a command."""
-
     note: str | None = Field(default=None, max_length=255)
 
 
 class CommandRead(BaseModel):
-    """A cleaning command and its current state."""
-
     model_config = ConfigDict(from_attributes=True)
 
     id: int

@@ -1,7 +1,3 @@
-"""Measurement request/response schemas."""
-
-from __future__ import annotations
-
 from datetime import datetime
 from decimal import Decimal
 
@@ -11,26 +7,9 @@ from app.core.timeutil import isoformat_utc
 
 
 class MeasurementCreate(BaseModel):
-    """Payload a bridge posts for a single rainfall reading.
-
-    ``bridge_id`` is intentionally absent: it is taken from the authenticated
-    API key so a bridge can only write data for itself.
-    """
-
-    sensor_id: str = Field(min_length=1, max_length=64, examples=["sensor1"])
-    value_mm: Decimal = Field(
-        ge=0,
-        le=9999.99,
-        max_digits=6,
-        decimal_places=2,
-        examples=[3.4],
-        description="Rainfall in millimetres.",
-    )
-    sent_at: int = Field(
-        ge=0,
-        examples=[1729260000],
-        description="Device transmit time as epoch seconds (UTC).",
-    )
+    sensor_id: str = Field(min_length=1, max_length=64)
+    value_mm: Decimal = Field(ge=0, le=9999.99, max_digits=6, decimal_places=2)
+    sent_at: int = Field(ge=0)
 
     @field_validator("sensor_id")
     @classmethod
@@ -42,8 +21,6 @@ class MeasurementCreate(BaseModel):
 
 
 class MeasurementRead(BaseModel):
-    """A stored measurement."""
-
     model_config = ConfigDict(from_attributes=True)
 
     id: int

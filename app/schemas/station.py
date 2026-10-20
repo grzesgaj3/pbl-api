@@ -1,11 +1,3 @@
-"""Station (bridge / sensor) response schemas.
-
-Both payloads are read-only and admin-facing. The bridge key hash is never
-part of a response.
-"""
-
-from __future__ import annotations
-
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, field_serializer
@@ -14,8 +6,6 @@ from app.core.timeutil import isoformat_utc
 
 
 class BridgeRead(BaseModel):
-    """A registered bridge (LoRa receiver / receiving station)."""
-
     model_config = ConfigDict(from_attributes=True)
 
     bridge_id: str
@@ -29,12 +19,6 @@ class BridgeRead(BaseModel):
 
 
 class SensorRead(BaseModel):
-    """A registered measuring station and statistics derived from readings.
-
-    ``last_measurement_at`` is the database time the most recent reading was
-    stored; ``measurement_count`` counts every stored reading for the sensor.
-    """
-
     model_config = ConfigDict(from_attributes=True)
 
     sensor_id: str

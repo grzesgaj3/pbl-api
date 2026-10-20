@@ -1,14 +1,4 @@
-"""Register bridges and manage their API keys.
-
-Usage::
-
-    python -m app.scripts.create_bridge mostek1            # create, print key
-    python -m app.scripts.create_bridge mostek1 --rotate   # issue a new key
-    python -m app.scripts.create_bridge mostek1 --deactivate
-    python -m app.scripts.create_bridge --list
-
-The plaintext key is printed exactly once; only its SHA-256 hash is stored.
-"""
+"""Register bridges and manage their API keys."""
 
 from __future__ import annotations
 
@@ -82,15 +72,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.list:
         _list()
         return 0
-
     if not args.bridge_id:
         parser.error("bridge_id is required (or use --list).")
-
     if args.rotate:
         key = _rotate(args.bridge_id)
         print(f"Rotated key for bridge '{args.bridge_id}'.\nAPI key: {key}")
         return 0
-
     if args.deactivate:
         _deactivate(args.bridge_id)
         print(f"Bridge '{args.bridge_id}' deactivated.")
